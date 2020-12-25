@@ -77,9 +77,27 @@ app.post('/rate', (req,res) =>{
                     }
                 )                  
             } 
+            const ratingdata = await ratingRef.where('productID', '==', req.body.productID)
+            .get();
+            var total_rating = 0;
+            var avg_rating = 0;
+            ratingdata.forEach(doc => {
+
+                total_rating = total_rating+doc.data().rating;
+            });
+            avg_rating = total_rating/ratingdata.size;
+            //console.log(total_rating);
+            //console.log(avg_rating);
+
+            let response = [];
+            const rating={
+                numberOfRaters: ratingdata.size,
+                avg_rating: avg_rating
+            }
+            response.push(rating)
+
             
-            
-            return res.status(201).send()     
+            return res.status(201).send(response)     
 
         }
         catch(error){
@@ -87,5 +105,6 @@ app.post('/rate', (req,res) =>{
         }
     })();
 });
+
 
 exports.app = functions.https.onRequest(app);
