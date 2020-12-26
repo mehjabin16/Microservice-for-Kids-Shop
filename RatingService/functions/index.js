@@ -55,10 +55,8 @@ app.post('/rate', (req,res) =>{
             .get();
             if (snapshot.empty) {
                   console.log('No matching documents.');
-                  await ratingRef.doc('/'+req.body.id+'/')
-                  .create(
+                  await ratingRef.add(
                     {
-                       
                         productID:req.body.productID,
                         rating:req.body.rating,
                         raterID:req.body.raterID 
@@ -66,11 +64,12 @@ app.post('/rate', (req,res) =>{
                 )     
             } 
             else {
+                let id ='' ;
                 snapshot.forEach(doc => {
-                const id = doc.id;
+                id = doc.id;
                 console.log(id)
                 });
-                await ratingRef.doc('/'+req.body.id+'/')
+                await ratingRef.doc(id)
                     .update(
                     {
                         rating:req.body.rating,  
@@ -81,16 +80,17 @@ app.post('/rate', (req,res) =>{
             .get();
             var total_rating = 0;
             var avg_rating = 0;
+            var productID = req.body.productID;
             ratingdata.forEach(doc => {
-
+            console.log(doc.data().rating);
                 total_rating = total_rating+doc.data().rating;
             });
             avg_rating = total_rating/ratingdata.size;
-            //console.log(total_rating);
             //console.log(avg_rating);
 
             let response = [];
             const rating={
+                productID:productID,
                 numberOfRaters: ratingdata.size,
                 avg_rating: avg_rating
             }
@@ -98,6 +98,34 @@ app.post('/rate', (req,res) =>{
 
             
             return res.status(201).send(response)     
+
+        }
+        catch(error){
+            return res.status(500).send(error)
+        }
+    })();
+});
+
+
+
+
+app.get('/ratinginfo', (req,res) =>{
+    (async()=>{
+        try{
+            const ratingRef =  db.collection('rating').doc(4)
+            let response =[] ;
+            await ratingRef.get().then(querySnapshot =>{
+                let docs=querySnapshot.docs;
+                for(let doc of docs){
+                    const ratingList={
+                        productid:doc.data().productID,
+                        rating:doc.data().rating,
+                    }
+                    response.push(ratingList)
+                }
+                return response;
+            }) 
+            return res.status(201).send(response)
 
         }
         catch(error){
